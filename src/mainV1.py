@@ -1,14 +1,15 @@
+import os
+
 from web3 import Web3
 
 # ==============================
 # CONFIGURATION
 # ==============================
 
-RPC_URL = "http://127.0.0.1:8545"  # exemple Ganache / Anvil / node local
-CONTRACT_ADDRESS = "0xYourContractAddressHere"
-
-PLAYER_B_ADDRESS = "0xYourPlayerBAddressHere"
-PLAYER_B_PRIVATE_KEY = "YOUR_PRIVATE_KEY_HERE"
+RPC_URL = os.getenv("RPC_URL")
+CONTRACT_ADDRESS = os.getenv("CONTRACT_ADDRESS")
+PLAYER_B_ADDRESS = os.getenv("PLAYER_B_ADDRESS")
+PLAYER_B_PRIVATE_KEY = os.getenv("PLAYER_B_PRIVATE_KEY")
 
 # ABI minimal du contrat
 CONTRACT_ABI = [
