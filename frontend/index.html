@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Devine Nombre Dapp</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="hero card sticky-top">
+      <div>
+        <div class="eyebrow">Dapp Ethereum · Ganache local</div>
+        <h1>Devine Nombre</h1>
+      </div>
+      <div class="hero-actions">
+        <div class="backend-indicator">
+          <span class="mini-label">Backend state</span>
+          <span id="backend-state" class="pill neutral">Checking…</span>
+        </div>
+        <button class="btn secondary" id="theme-toggle">🌙 Dark</button>
+        <button class="btn secondary" id="refresh-accounts">Rafraîchir comptes</button>
+        <button class="btn" id="toggle-settings">Paramètres</button>
+      </div>
+    </header>
+
+    <section class="card account-strip">
+      <div class="account-card">
+        <div class="mini-label">Joueur A</div>
+        <div id="account-a-address" class="mono">—</div>
+        <div id="account-a-balance" class="balance">—</div>
+      </div>
+      <div class="account-card">
+        <div class="mini-label">Joueur B</div>
+        <div id="account-b-address" class="mono">—</div>
+        <div id="account-b-balance" class="balance">—</div>
+      </div>
+    </section>
+
+    <section class="card settings" id="settings-panel">
+      <div class="section-title">Paramètres globaux</div>
+      <div class="grid two">
+        <label>
+          <span>Backend URL</span>
+          <input id="cfg-backend-url" value="http://127.0.0.1:2020" />
+        </label>
+        <label>
+          <span>Ganache RPC URL</span>
+          <input id="cfg-rpc-url" value="http://127.0.0.1:7545" />
+        </label>
+        <label>
+          <span>Clé privée joueur A</span>
+          <input id="cfg-playera-key" type="password" placeholder="0x..." />
+        </label>
+        <label>
+          <span>Clé privée joueur B</span>
+          <input id="cfg-playerb-key" type="password" placeholder="0x..." />
+        </label>
+        <label>
+          <span>Adresse joueur B (optionnel)</span>
+          <input id="cfg-playerb-address" placeholder="laisse vide pour utiliser l'adresse déduite de la clé privée B" />
+        </label>
+      </div>
+      <div class="actions-row">
+        <button class="btn" id="save-settings">Enregistrer</button>
+        <button class="btn secondary" id="load-settings">Recharger</button>
+        <button class="btn secondary" id="check-backend">Tester backend</button>
+      </div>
+    </section>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="v1">Version 1</button>
+      <button class="tab" data-tab="v2">Version 2</button>
+      <button class="tab" data-tab="v3">Version 3</button>
+      <button class="tab" data-tab="v4">Version 4</button>
+    </div>
+
+    <main>
+      <section class="view active" id="view-v1">
+        <div class="card">
+          <div class="section-title">Version 1 — Jeu de base</div>
+          <div class="grid three">
+            <label><span>Secret (A)</span><input id="v1-secret" type="number" min="1" max="100" value="42"></label>
+            <label><span>Max essais</span><input id="v1-max" type="number" min="1" value="10"></label>
+            <label><span>Adresse du contrat</span><input id="v1-contract" placeholder="sera remplie après déploiement"></label>
+          </div>
+          <div class="actions-row">
+            <button class="btn" id="v1-deploy">Déployer V1</button>
+            <button class="btn secondary" id="v1-state">Voir état</button>
+          </div>
+          <div id="v1-guess-banner" class="guess-banner neutral top-gap">Pas encore de guess.</div>
+          <div class="grid two top-gap">
+            <label><span>Guess (B)</span><input id="v1-guess-value" type="number" min="1" max="100"></label>
+            <div class="inline-actions"><button class="btn" id="v1-guess">Envoyer guess</button></div>
+          </div>
+          <pre id="v1-output" class="output"></pre>
+        </div>
+      </section>
+
+      <section class="view" id="view-v2">
+        <div class="card">
+          <div class="section-title">Version 2 — Récompenses</div>
+          <div class="grid four">
+            <label><span>Secret (A)</span><input id="v2-secret" type="number" min="1" max="100" value="37"></label>
+            <label><span>Max essais</span><input id="v2-max" type="number" min="1" value="10"></label>
+            <label><span>Mise ETH</span><input id="v2-stake" type="number" min="0.001" step="0.001" value="1"></label>
+            <label><span>Adresse du contrat</span><input id="v2-contract"></label>
+          </div>
+          <div class="actions-row wrap">
+            <button class="btn" id="v2-deploy">Déployer V2</button>
+            <button class="btn secondary" id="v2-state">Voir état</button>
+            <button class="btn secondary" id="v2-join">B rejoint</button>
+          </div>
+          <div id="v2-guess-banner" class="guess-banner neutral top-gap">Pas encore de guess.</div>
+          <div class="grid two top-gap">
+            <label><span>Guess (B)</span><input id="v2-guess-value" type="number" min="1" max="100"></label>
+            <div class="inline-actions"><button class="btn" id="v2-guess">Envoyer guess</button></div>
+          </div>
+          <pre id="v2-output" class="output"></pre>
+        </div>
+      </section>
+
+      <section class="view" id="view-v3">
+        <div class="card">
+          <div class="section-title">Version 3 — Contrat générique</div>
+          <div class="grid three">
+            <label><span>Adresse du contrat générique</span><input id="v3-contract"></label>
+            <label><span>Game ID actif</span><input id="v3-game-id" type="number" min="0" value="0"></label>
+            <div class="inline-actions"><button class="btn" id="v3-deploy">Déployer V3</button></div>
+          </div>
+          <div class="grid four top-gap">
+            <label><span>Secret (A)</span><input id="v3-secret" type="number" min="1" max="100" value="55"></label>
+            <label><span>Max essais</span><input id="v3-max" type="number" min="1" value="10"></label>
+            <label><span>Mise ETH</span><input id="v3-stake" type="number" min="0.001" step="0.001" value="1"></label>
+            <div class="inline-actions"><button class="btn" id="v3-create">Créer partie</button></div>
+          </div>
+          <div class="actions-row wrap top-gap">
+            <button class="btn secondary" id="v3-list">Lister parties</button>
+            <button class="btn secondary" id="v3-state">Voir état game</button>
+            <button class="btn secondary" id="v3-join">B rejoint game</button>
+          </div>
+          <div id="v3-guess-banner" class="guess-banner neutral top-gap">Pas encore de guess.</div>
+          <div class="grid two top-gap">
+            <label><span>Guess (B)</span><input id="v3-guess-value" type="number" min="1" max="100"></label>
+            <div class="inline-actions"><button class="btn" id="v3-guess">Envoyer guess</button></div>
+          </div>
+          <pre id="v3-output" class="output"></pre>
+        </div>
+      </section>
+
+      <section class="view" id="view-v4">
+        <div class="card">
+          <div class="section-title">Version 4 — Confidentialité pratique via arbre de Merkle</div>
+          <p class="muted small">Le secret ne part pas on-chain. A construit un arbre local à partir du nombre secret, le contrat ne voit qu’une racine. À chaque guess de B, A résout ce guess avec une preuve Merkle.</p>
+          <div class="grid four">
+            <label><span>Secret (A)</span><input id="v4-secret" type="number" min="1" max="100" value="63"></label>
+            <label><span>Max essais</span><input id="v4-max" type="number" min="1" value="10"></label>
+            <label><span>Mise ETH</span><input id="v4-stake" type="number" min="0.001" step="0.001" value="1"></label>
+            <label><span>Adresse du contrat</span><input id="v4-contract"></label>
+          </div>
+          <div class="actions-row wrap">
+            <button class="btn secondary" id="v4-prepare">Préparer racine Merkle</button>
+            <button class="btn" id="v4-deploy">Déployer V4</button>
+            <button class="btn secondary" id="v4-state">Voir état</button>
+            <button class="btn secondary" id="v4-join">B rejoint</button>
+          </div>
+          <div id="v4-guess-banner" class="guess-banner neutral top-gap">Pas encore de résolution.</div>
+          <div class="grid three top-gap">
+            <label><span>Guess (B)</span><input id="v4-guess-value" type="number" min="1" max="100"></label>
+            <div class="inline-actions"><button class="btn" id="v4-submit-guess">B envoie guess</button></div>
+            <div class="inline-actions"><button class="btn secondary" id="v4-resolve-guess">A résout guess</button></div>
+          </div>
+          <pre id="v4-output" class="output"></pre>
+        </div>
+      </section>
+    </main>
+
+    <section class="card">
+      <div class="section-title">Journal</div>
+      <pre id="log" class="output log"></pre>
+    </section>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -2,166 +2,89 @@
 pragma solidity ^0.8.20;
 
 contract GuessNumberV2 {
-    address public playerA;
-    address public playerB;
+    address payable public immutable playerA;
+    address payable public immutable playerB;
+    uint8 private immutable secretNumber;
+    uint8 public immutable maxAttempts;
+    uint256 public immutable stake;
 
-    uint8 private secretNumber;
-    uint8 public maxAttempts;
     uint8 public attempts;
-
-    uint256 public stakeAmount;
-    bool public playerBJoined;
+    bool public joined;
     bool public gameOver;
     bool public wonByB;
+    int8 public lastResultCode; // -1 too high, 0 correct, 1 too low
+    uint8 public lastGuess;
 
-    enum GuessResult {
-        TooSmall,
-        TooLarge,
-        Correct
-    }
+    event Joined(address indexed playerB, uint256 stake);
+    event GuessEvaluated(address indexed playerB, uint8 guess, int8 resultCode, uint8 attemptsUsed, bool gameOver, bool wonByB);
+    event Payout(address indexed winner, uint256 amount);
 
-    event GameCreated(
-        address indexed playerA,
-        uint8 maxAttempts,
-        uint256 stakeAmount
-    );
+    constructor(address _playerB, uint8 _secretNumber, uint8 _maxAttempts) payable {
+        require(_playerB != address(0), "playerB required");
+        require(_secretNumber >= 1 && _secretNumber <= 100, "secret out of range");
+        require(_maxAttempts > 0, "maxAttempts must be > 0");
+        require(msg.value > 0, "stake required");
 
-    event PlayerBJoined(address indexed playerB, uint256 stakeAmount);
-
-    event GuessMade(
-        address indexed playerB,
-        uint8 guessedNumber,
-        GuessResult result,
-        uint8 attemptsLeft
-    );
-
-    event GameEnded(address indexed winner, uint256 reward, bool wonByB);
-
-    modifier onlyPlayerA() {
-        require(msg.sender == playerA, "Seul le joueur A peut faire cela");
-        _;
+        playerA = payable(msg.sender);
+        playerB = payable(_playerB);
+        secretNumber = _secretNumber;
+        maxAttempts = _maxAttempts;
+        stake = msg.value;
+        lastResultCode = 2;
     }
 
     modifier onlyPlayerB() {
-        require(msg.sender == playerB, "Seul le joueur B peut jouer");
+        require(msg.sender == playerB, "only playerB");
         _;
     }
 
-    modifier notGameOver() {
-        require(!gameOver, "La partie est terminee");
-        _;
+    function previewGuess(uint8 guess_) public view returns (int8) {
+        require(guess_ >= 1 && guess_ <= 100, "guess out of range");
+        if (guess_ == secretNumber) return 0;
+        if (guess_ < secretNumber) return 1;
+        return -1;
     }
 
-    modifier onlyWhenBJoined() {
-        require(playerBJoined, "Le joueur B n'a pas encore rejoint");
-        _;
+    function join() external payable onlyPlayerB {
+        require(!joined, "already joined");
+        require(msg.value == stake, "exact stake required");
+        joined = true;
+        emit Joined(playerB, msg.value);
     }
 
-    constructor(uint8 _secretNumber, uint8 _maxAttempts) payable {
-        require(_secretNumber >= 1 && _secretNumber <= 100, "Nombre secret invalide");
-        require(_maxAttempts > 0, "Le nombre d'essais doit etre > 0");
-        require(msg.value > 0, "Le joueur A doit miser de l'ETH");
+    function guess(uint8 guess_) external onlyPlayerB {
+        require(joined, "playerB not joined");
+        require(!gameOver, "game over");
+        require(guess_ >= 1 && guess_ <= 100, "guess out of range");
 
-        playerA = msg.sender;
-        secretNumber = _secretNumber;
-        maxAttempts = _maxAttempts;
-        stakeAmount = msg.value;
+        attempts += 1;
+        lastGuess = guess_;
+        lastResultCode = previewGuess(guess_);
 
-        emit GameCreated(playerA, maxAttempts, stakeAmount);
-    }
-
-    function joinGame() external payable notGameOver {
-        require(!playerBJoined, "Le joueur B a deja rejoint");
-        require(msg.sender != playerA, "Le joueur A ne peut pas etre le joueur B");
-        require(msg.value == stakeAmount, "La mise du joueur B doit etre egale a celle de A");
-
-        playerB = msg.sender;
-        playerBJoined = true;
-
-        emit PlayerBJoined(playerB, msg.value);
-    }
-
-    function guess(uint8 _guess)
-        external
-        onlyPlayerB
-        onlyWhenBJoined
-        notGameOver
-        returns (GuessResult)
-    {
-        require(_guess >= 1 && _guess <= 100, "La proposition doit etre entre 1 et 100");
-        require(attempts < maxAttempts, "Plus aucune tentative disponible");
-
-        attempts++;
-
-        GuessResult result;
-
-        if (_guess < secretNumber) {
-            result = GuessResult.TooSmall;
-            emit GuessMade(playerB, _guess, result, maxAttempts - attempts);
-        } else if (_guess > secretNumber) {
-            result = GuessResult.TooLarge;
-            emit GuessMade(playerB, _guess, result, maxAttempts - attempts);
-        } else {
-            result = GuessResult.Correct;
+        if (lastResultCode == 0) {
+            gameOver = true;
             wonByB = true;
+            _pay(playerB, address(this).balance);
+        } else if (attempts >= maxAttempts) {
             gameOver = true;
-
-            emit GuessMade(playerB, _guess, result, maxAttempts - attempts);
-
-            uint256 reward = address(this).balance;
-            payable(playerB).transfer(reward);
-
-            emit GameEnded(playerB, reward, true);
-            return result;
+            wonByB = false;
+            _pay(playerA, address(this).balance);
         }
 
-        if (attempts >= maxAttempts) {
-            gameOver = true;
-
-            uint256 reward = address(this).balance;
-            payable(playerA).transfer(reward);
-
-            emit GameEnded(playerA, reward, false);
-        }
-
-        return result;
+        emit GuessEvaluated(playerB, guess_, lastResultCode, attempts, gameOver, wonByB);
     }
 
     function attemptsLeft() external view returns (uint8) {
         return maxAttempts - attempts;
     }
 
-    function getGameState()
-        external
-        view
-        returns (
-            address,
-            address,
-            uint8,
-            uint8,
-            bool,
-            bool,
-            bool,
-            uint256,
-            uint256
-        )
-    {
-        return (
-            playerA,
-            playerB,
-            maxAttempts,
-            attempts,
-            playerBJoined,
-            gameOver,
-            wonByB,
-            stakeAmount,
-            address(this).balance
-        );
+    function contractBalance() external view returns (uint256) {
+        return address(this).balance;
     }
 
-    // Fonction de debug/demo uniquement
-    // En vrai, cette version n'est toujours pas securisee
-    function revealSecret() external view onlyPlayerA returns (uint8) {
-        return secretNumber;
+    function _pay(address payable to, uint256 amount) internal {
+        (bool ok, ) = to.call{value: amount}("");
+        require(ok, "transfer failed");
+        emit Payout(to, amount);
     }
 }
