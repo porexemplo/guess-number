@@ -43,6 +43,8 @@ Au premier lancement, `py-solc-x` peut installer le compilateur Solidity `0.8.20
 
 ### 4) Ouvrir le frontend
 Ouvre simplement `frontend/index.html` dans ton navigateur.
+![1](./screenshots/front/1.png)
+
 
 ## Utilisation
 
