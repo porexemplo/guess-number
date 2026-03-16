@@ -21,6 +21,7 @@ Projet complet **from scratch** avec :
 ## Installation
 
 ### 1) Lancer Ganache
+![step1](./screenshots/ganache/step1.png)
 Par défaut l'app vise :
 - RPC : `http://127.0.0.1:7545`
 - Backend : `http://127.0.0.1:2020`
@@ -48,8 +49,9 @@ Ouvre simplement `frontend/index.html` dans ton navigateur.
 ## Paramètres globaux
 Dans le panneau **Paramètres** :
 - colle la **clé privée du joueur A**
+![step2](./screenshots/ganache/step2.png)
+![step3](./screenshots/ganache/step3.png)
 - colle la **clé privée du joueur B**
-- optionnel : force une **adresse de joueur B** si tu veux une adresse différente de celle dérivée de la clé privée
 
 Le frontend appelle le backend pour :
 - récupérer les adresses et balances
