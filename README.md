@@ -1,5 +1,8 @@
 # Devine Nombre Dapp
 
+![](./screenshots/front/v4-4.png)
+
+
 Projet complet **from scratch** avec :
 - **4 smart contracts Solidity**
 - **backend Python / Flask + web3.py**
@@ -41,6 +44,8 @@ python backend.py
 
 Au premier lancement, `py-solc-x` peut installer le compilateur Solidity `0.8.20`.
 
+![](./screenshots/front/term.png)
+
 ### 4) Ouvrir le frontend
 Ouvre simplement `frontend/index.html` dans ton navigateur.
 ![1](./screenshots/front/1.png)
@@ -54,6 +59,7 @@ Dans le panneau **Paramètres** :
 ![step2](./screenshots/ganache/step2.png)
 ![step3](./screenshots/ganache/step3.png)
 - colle la **clé privée du joueur B**
+![](./screenshots/front/conf.png)
 
 Le frontend appelle le backend pour :
 - récupérer les adresses et balances
@@ -61,16 +67,20 @@ Le frontend appelle le backend pour :
 - envoyer les transactions
 - lire l'état des contrats
 
+![](./screenshots/front/acc.png)
+
 ## Version 1
 - A déploie avec son secret et le nombre max d'essais
 - B envoie ses guesses
 - le contrat retourne `plus petit`, `plus grand` ou `correct`
+![](./screenshots/front/v1.png)
 
 ## Version 2
 - A déploie avec une mise en ETH
 - B rejoint avec exactement la même mise
 - si B trouve le bon nombre, il gagne le pot
 - sinon A récupère le pot quand le nombre d'essais est épuisé
+![](./screenshots/front/v2-1.png)
 
 ## Version 3
 - déploie d'abord **un seul contrat générique**
@@ -78,11 +88,11 @@ Le frontend appelle le backend pour :
 - B rejoint cette partie
 - B joue sur `gameId`
 - tu peux lister toutes les parties
+![](./screenshots/front/v3-1.png)
+![](./screenshots/front/v3-2.png)
+![](./screenshots/front/v3-3.png)
 
 ## Version 4
-Cette version est la plus délicate.
-
-### Ce qui est implémenté ici
 On utilise une **approche pratique de confidentialité** :
 - A choisit un secret
 - le backend construit localement un **arbre de Merkle** de toutes les réponses possibles pour les guesses `1..100`
@@ -91,14 +101,19 @@ On utilise une **approche pratique de confidentialité** :
 - A résout ce guess avec une **preuve Merkle**
 - le contrat vérifie la preuve sans jamais stocker le secret sur la blockchain
 
+![](./screenshots/front/v4.png)
+![](./screenshots/front/v4-1.png)
+![](./screenshots/front/v4-2.png)
+![](./screenshots/front/v4-3.png)
+![](./screenshots/front/v4-4.png)
+
 ### Pourquoi cette approche
 Sur Ethereum public, faire une vraie comparaison privée on-chain sans révéler le secret demande des mécanismes plus lourds, typiquement **ZK proofs** ou autre design cryptographique avancé.
 
-Là, tu as une version :
+Cette version est :
 - fonctionnelle
 - vérifiable on-chain
 - sans secret stocké en clair
-- beaucoup plus réaliste pour un projet pédagogique
 
 ## API backend
 Principales routes :
@@ -133,9 +148,3 @@ Principales routes :
 - `POST /v4/join`
 - `POST /v4/submit_guess`
 - `POST /v4/resolve_guess`
-
-## Notes utiles
-- Le frontend est volontairement simple pour limiter les bugs.
-- Tout passe par le backend Python, donc pas besoin de MetaMask.
-- C'est pensé pour **Ganache local**, pas pour de la prod.
-- Si Ganache redémarre, les nonces / adresses / balances peuvent changer selon la config.
